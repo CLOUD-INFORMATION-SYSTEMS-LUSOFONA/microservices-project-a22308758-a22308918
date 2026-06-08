@@ -1,0 +1,30 @@
+---
+- name: Setup Docker and Run Sanity App
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Docker
+      dnf:
+        name: docker
+        state: present
+
+    - name: Start and Enable Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Ensure ec2-user is in docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+
+    - name: Run Hello World Container
+      docker_container:
+        name: sanity-app
+        image: "{{ docker_image }}"
+        state: started
+        restart_policy: always
+        published_ports:
+          - "80:80"

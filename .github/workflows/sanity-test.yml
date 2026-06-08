@@ -1,0 +1,97 @@
+name: Sanity Test Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'services/sanity-test/**'
+      - 'infrastructure/terraform/**'
+      - 'ansible/**'
+      - '.github/workflows/sanity-test.yml'
+
+jobs:
+  infrastructure:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infrastructure/terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: infrastructure/terraform
+
+  build-and-push:
+    name: Build and Push Docker Image
+    needs: infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/sanity-test
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/sanity-app:latest
+
+  deploy:
+    name: Ansible Deploy
+    needs: [infrastructure, build-and-push]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform (to get IP)
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infrastructure/terraform
+
+      - name: Get EC2 IP
+        id: get-ip
+        run: echo "EC2_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
+        working-directory: infrastructure/terraform
+
+      - name: Create SSH Key File
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > project.pem
+          chmod 600 project.pem
+
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook -i "${{ steps.get-ip.outputs.EC2_IP }}," \
+            --private-key project.pem \
+            -u ec2-user \
+            -e "docker_image=${{ secrets.DOCKERHUB_USERNAME }}/sanity-app:latest" \
+            ansible/playbooks/sanity-test.yml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
