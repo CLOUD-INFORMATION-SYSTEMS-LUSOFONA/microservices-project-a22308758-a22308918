@@ -82,7 +82,13 @@ jobs:
 
       - name: Get EC2 IP
         id: get-ip
-        run: echo "EC2_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
+        run: |
+          IP=$(terraform output -raw ec2_public_ip)
+          if [ -z "$IP" ]; then
+            echo "ERRO: O IP da EC2 veio vazio!"
+            exit 1
+          fi
+          echo "EC2_IP=$IP" >> $GITHUB_OUTPUT
         working-directory: infrastructure/terraform
 
       - name: Create SSH Key File
