@@ -4,26 +4,25 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: Wait for SSH to be fully responsive
-      raw: echo "SSH is up"
-      register: ssh_check
-      until: ssh_check.rc == 0
+    - name: Wait for SSH
+      raw: echo "ready"
       retries: 20
       delay: 10
 
+    - name: Wait for Cloud-init (Garante que a máquina terminou de nascer)
+      raw: while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 2; done
+
     - name: Install Docker
-      shell: dnf install -y docker
-      
-    - name: Start and Enable Docker
-      shell: |
+      raw: dnf install -y docker
+
+    - name: Start Docker
+      raw: |
         systemctl start docker
         systemctl enable docker
+        usermod -aG docker ec2-user
 
-    - name: Ensure ec2-user is in docker group
-      shell: usermod -aG docker ec2-user
-
-    - name: Run Sanity Container
-      shell: |
+    - name: Run App
+      raw: |
         docker pull {{ docker_image }}
         docker rm -f sanity-app || true
         docker run -d --name sanity-app -p 80:80 {{ docker_image }}
