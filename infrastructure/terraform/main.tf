@@ -101,7 +101,7 @@ resource "aws_security_group" "sanity_sg" {
 resource "aws_instance" "sanity_ec2" {
   ami           = "ami-0c7217cdde317cfec" 
   instance_type = "t3.micro"
-  key_name      = "project"
+  key_name      = "microservices-key"
   subnet_id     = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.sanity_sg.id]
 

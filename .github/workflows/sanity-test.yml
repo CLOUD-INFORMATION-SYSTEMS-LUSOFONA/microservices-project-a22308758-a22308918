@@ -87,13 +87,15 @@ jobs:
 
       - name: Create SSH Key File
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > project.pem
-          chmod 400 project.pem
+          cat << 'EOF' > microservices-key.pem
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          EOF
+          chmod 400 microservices-key.pem
 
       - name: Run Ansible Playbook
         run: |
           ansible-playbook -i "${{ steps.get-ip.outputs.EC2_IP }}," \
-            --private-key project.pem \
+            --private-key microservices-key.pem \
             -u ec2-user \
             -e "docker_image=${{ secrets.DOCKERHUB_USERNAME }}/sanity-app:latest" \
             ansible/playbooks/sanity-test.yml
