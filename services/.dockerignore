@@ -3,7 +3,7 @@
 
 target/
 .git/
-.gitignore
+../.gitignore
 *.md
 Aulas/
 .mvn/

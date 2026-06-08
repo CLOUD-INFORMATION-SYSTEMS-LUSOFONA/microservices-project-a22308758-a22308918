@@ -7,8 +7,8 @@ pom.xml.next
 release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.jar
+services/.mvn/timing.properties
+services/.mvn/wrapper/maven-wrapper.jar
 
 # IDE
 .idea/
