@@ -9,20 +9,20 @@
       retries: 20
       delay: 10
 
-    - name: Wait for Cloud-init (Garante que a máquina terminou de nascer)
+    - name: Wait for Cloud-init
       raw: while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 2; done
 
-    - name: Install Docker
-      raw: dnf install -y docker
+    - name: Install Docker (Universal Amazon Linux command)
+      raw: sudo yum install -y docker || sudo dnf install -y docker
 
-    - name: Start Docker
+    - name: Start and Configure Docker
       raw: |
-        systemctl start docker
-        systemctl enable docker
-        usermod -aG docker ec2-user
+        sudo systemctl start docker
+        sudo systemctl enable docker
+        sudo usermod -aG docker ec2-user
 
     - name: Run App
       raw: |
-        docker pull {{ docker_image }}
-        docker rm -f sanity-app || true
-        docker run -d --name sanity-app -p 80:80 {{ docker_image }}
+        sudo docker pull {{ docker_image }}
+        sudo docker rm -f sanity-app || true
+        sudo docker run -d --name sanity-app -p 80:80 {{ docker_image }}
