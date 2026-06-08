@@ -2,12 +2,16 @@ name: Sanity Test Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'services/sanity-test/**'
-      - 'infrastructure/terraform/**'
-      - 'ansible/**'
-      - '.github/workflows/sanity-test.yml'
+      - "services/sanity-test/**"
+      - "infrastructure/terraform/**"
+      - "ansible/**"
+      - ".github/workflows/sanity-test.yml"
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   infrastructure:
