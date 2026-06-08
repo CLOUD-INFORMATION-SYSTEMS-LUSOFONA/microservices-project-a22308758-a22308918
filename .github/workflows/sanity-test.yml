@@ -88,7 +88,7 @@ jobs:
       - name: Create SSH Key File
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > project.pem
-          chmod 600 project.pem
+          chmod 400 project.pem
 
       - name: Run Ansible Playbook
         run: |
@@ -99,3 +99,4 @@ jobs:
             ansible/playbooks/sanity-test.yml
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
+          ANSIBLE_SSH_RETRIES: 3
