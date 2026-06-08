@@ -2,7 +2,12 @@
 - name: Setup Docker and Run Sanity App
   hosts: all
   become: yes
+  gather_facts: no
   tasks:
+    - name: Wait for system to be ready
+      wait_for_connection:
+        timeout: 60
+
     - name: Install Docker
       dnf:
         name: docker
@@ -20,11 +25,8 @@
         groups: docker
         append: yes
 
-    - name: Run Hello World Container
-      docker_container:
-        name: sanity-app
-        image: "{{ docker_image }}"
-        state: started
-        restart_policy: always
-        published_ports:
-          - "80:80"
+    - name: Run Sanity Container via Shell
+      shell: |
+        docker pull {{ docker_image }}
+        docker rm -f sanity-app || true
+        docker run -d --name sanity-app -p 80:80 {{ docker_image }}
