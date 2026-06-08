@@ -4,28 +4,25 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: Wait for system to be ready
-      wait_for_connection:
-        timeout: 60
+    - name: Wait for SSH to be fully responsive
+      raw: echo "SSH is up"
+      register: ssh_check
+      until: ssh_check.rc == 0
+      retries: 20
+      delay: 10
 
     - name: Install Docker
-      dnf:
-        name: docker
-        state: present
-
+      shell: dnf install -y docker
+      
     - name: Start and Enable Docker
-      systemd:
-        name: docker
-        state: started
-        enabled: yes
+      shell: |
+        systemctl start docker
+        systemctl enable docker
 
     - name: Ensure ec2-user is in docker group
-      user:
-        name: ec2-user
-        groups: docker
-        append: yes
+      shell: usermod -aG docker ec2-user
 
-    - name: Run Sanity Container via Shell
+    - name: Run Sanity Container
       shell: |
         docker pull {{ docker_image }}
         docker rm -f sanity-app || true
