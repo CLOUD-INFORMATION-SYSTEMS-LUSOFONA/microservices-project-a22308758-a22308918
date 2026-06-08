@@ -16,7 +16,8 @@
 version: '3.8'
 
 # TODO: Add your services here
-services:
+#services:
+
   # TODO: Add Zookeeper service (required for Kafka)
   
   # TODO: Add Kafka service
