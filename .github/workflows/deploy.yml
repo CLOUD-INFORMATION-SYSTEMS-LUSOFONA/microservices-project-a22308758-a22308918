@@ -119,3 +119,6 @@ jobs:
             -e "queue_url=${{ needs.infrastructure.outputs.queue_url }}" \
             -e "dlq_url=${{ needs.infrastructure.outputs.dlq_url }}" \
             ansible/playbooks/deploy.yml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
+          ANSIBLE_SSH_RETRIES: 3
