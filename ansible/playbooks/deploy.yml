@@ -29,27 +29,22 @@
     - name: Create app directory
       raw: mkdir -p /home/ec2-user/app
 
-    - name: Reset SSH connection to avoid timeout
-      meta: reset_connection
-
     - name: Copy docker-compose.yml to EC2
-      copy:
-        src: ../../services/docker-compose.yml
-        dest: /home/ec2-user/app/docker-compose.yml
-        owner: ec2-user
-        mode: '0644'
+      raw: |
+        cat > /home/ec2-user/app/docker-compose.yml << 'COMPOSEOF'
+        {{ lookup('file', '../../services/docker-compose.yml') }}
+        COMPOSEOF
 
     - name: Write .env file
-      copy:
-        dest: /home/ec2-user/app/.env
-        content: |
-          DOCKERHUB_USERNAME={{ docker_username }}
-          QUEUE_URL={{ queue_url }}
-          DLQ_URL={{ dlq_url }}
+      raw: |
+        cat > /home/ec2-user/app/.env << 'EOF'
+        DOCKERHUB_USERNAME={{ docker_username }}
+        QUEUE_URL={{ queue_url }}
+        DLQ_URL={{ dlq_url }}
+        EOF
 
     - name: Pull latest images and restart stack
       raw: |
         cd /home/ec2-user/app
-        export DOCKERHUB_USERNAME={{ docker_username }}
         sudo /usr/local/bin/docker-compose pull
         sudo /usr/local/bin/docker-compose up -d --remove-orphans
