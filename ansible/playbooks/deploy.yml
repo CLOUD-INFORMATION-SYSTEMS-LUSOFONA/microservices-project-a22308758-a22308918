@@ -1,0 +1,44 @@
+---
+- name: Deploy Full Microservices Stack
+  hosts: all
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Wait for SSH
+      raw: echo "ready"
+      retries: 20
+      delay: 10
+
+    - name: Wait for Cloud-init
+      raw: while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 2; done
+
+    - name: Install Docker and Git
+      raw: sudo yum install -y docker git || sudo dnf install -y docker git
+
+    - name: Start and Configure Docker
+      raw: |
+        sudo systemctl start docker
+        sudo systemctl enable docker
+        sudo usermod -aG docker ec2-user
+
+    - name: Install Docker Compose
+      raw: |
+        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+
+    - name: Create app directory
+      raw: mkdir -p /home/ec2-user/app
+
+    - name: Copy docker-compose.yml to EC2
+      copy:
+        src: ../../services/docker-compose.yml
+        dest: /home/ec2-user/app/docker-compose.yml
+        owner: ec2-user
+        mode: '0644'
+
+    - name: Pull latest images and restart stack
+      raw: |
+        cd /home/ec2-user/app
+        export DOCKERHUB_USERNAME={{ docker_username }}
+        sudo /usr/local/bin/docker-compose pull
+        sudo /usr/local/bin/docker-compose up -d --remove-orphans

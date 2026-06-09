@@ -25,11 +25,13 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   user-service:
+    image: ${DOCKERHUB_USERNAME:-local}/user-service:latest
     build: ./user-service
     ports:
       - "8081:8081"
 
   product-service:
+    image: ${DOCKERHUB_USERNAME:-local}/product-service:latest
     build: ./product-service
     ports:
       - "8082:8082"
@@ -42,6 +44,7 @@ services:
       AWS_REGION: "us-east-1"
 
   order-service:
+    image: ${DOCKERHUB_USERNAME:-local}/order-service:latest
     build: ./order-service
     ports:
       - "8083:8083"
@@ -60,6 +63,7 @@ services:
       - product-service
 
   api-gateway:
+    image: ${DOCKERHUB_USERNAME:-local}/api-gateway:latest
     build: ./api-gateway
     ports:
       - "8080:8080"

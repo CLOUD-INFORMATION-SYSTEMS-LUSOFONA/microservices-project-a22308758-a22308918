@@ -42,14 +42,47 @@ resource "aws_vpc" "main" {
   })
 }
 
-resource "aws_subnet" "public" {
+# public subnet
+resource "aws_subnet" "public_a" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "${var.aws_region}a"
 
   tags = merge(var.common_tags, {
-    Name = "${var.project_name}-${var.environment}-public-subnet"
+    Name = "${var.project_name}-${var.environment}-public-a"
+  })
+}
+
+resource "aws_subnet" "public_b" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.2.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "${var.aws_region}b"
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-${var.environment}-public-b"
+  })
+}
+
+# private subnet
+resource "aws_subnet" "private_a" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.10.0/24"
+  availability_zone = "${var.aws_region}a"
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-${var.environment}-private-a"
+  })
+}
+
+resource "aws_subnet" "private_b" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.11.0/24"
+  availability_zone = "${var.aws_region}b"
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-${var.environment}-private-b"
   })
 }
 
@@ -74,14 +107,19 @@ resource "aws_route_table" "public" {
   })
 }
 
-resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
+resource "aws_route_table_association" "public_a" {
+  subnet_id      = aws_subnet.public_a.id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table_association" "public_b" {
+  subnet_id      = aws_subnet.public_b.id
   route_table_id = aws_route_table.public.id
 }
 
 resource "aws_security_group" "sanity_sg" {
   name        = "sanity-test-sg"
-  description = "Permitir SSH e port 80"
+  description = "Permitir SSH e porta 80/8080/8081/8082/8083"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -91,9 +129,10 @@ resource "aws_security_group" "sanity_sg" {
     cidr_blocks = ["0.0.0.0/0"] 
   }
 
+  #microserviços
   ingress {
     from_port   = 80
-    to_port     = 80
+    to_port     = 8083
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -108,16 +147,54 @@ resource "aws_security_group" "sanity_sg" {
   tags = var.common_tags
 }
 
-# Resource for sanity check EC2 instance
+resource "aws_security_group" "rds_sg" {
+  name        = "rds-postgres-sg"
+  description = "Permitir acesso PostgreSQL apenas da EC2"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sanity_sg.id] 
+  }
+
+  tags = var.common_tags
+}
+
 resource "aws_instance" "sanity_ec2" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t3.micro"
   key_name                    = "microservices-key"
-  subnet_id                   = aws_subnet.public.id
+  subnet_id                   = aws_subnet.public_a.id
   vpc_security_group_ids      = [aws_security_group.sanity_sg.id]
-  associate_public_ip_address = true # Garante a atribuição de IP público
+  associate_public_ip_address = true 
 
   tags = merge(var.common_tags, {
     Name = "${var.project_name}-sanity-ec2"
   })
+}
+
+resource "aws_db_subnet_group" "main" {
+  name       = "main-db-subnet-group"
+  subnet_ids = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+
+  tags = var.common_tags
+}
+
+resource "aws_db_instance" "postgres" {
+  identifier             = "${var.project_name}-db"
+  engine                 = "postgres"
+  engine_version         = "16.3"
+  instance_class         = "db.t3.micro" 
+  allocated_storage      = 20
+  db_name                = "microservicesdb"
+  username               = "dbadmin"
+  password               = "ChangeMe123!" # TODO: usar env ou secrets
+  db_subnet_group_name   = aws_db_subnet_group.main.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+  skip_final_snapshot    = true 
+  publicly_accessible    = false 
+
+  tags = var.common_tags
 }
