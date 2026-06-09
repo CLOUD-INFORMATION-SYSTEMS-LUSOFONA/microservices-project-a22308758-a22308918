@@ -29,6 +29,12 @@ services:
     build: ./user-service
     ports:
       - "8081:8081"
+    environment:
+      DB_HOST: ${DB_HOST:-microservices-project-db.cc5akoumm873.us-east-1.rds.amazonaws.com}
+      DB_PORT: "5432"
+      DB_NAME: "microservicesdb"
+      DB_USER: "dbadmin"
+      DB_PASSWORD: "ChangeMe123!"
 
   product-service:
     image: ${DOCKERHUB_USERNAME:-local}/product-service:latest
@@ -36,6 +42,11 @@ services:
     ports:
       - "8082:8082"
     environment:
+      DB_HOST: ${DB_HOST:-microservices-project-db.cc5akoumm873.us-east-1.rds.amazonaws.com}
+      DB_PORT: "5432"
+      DB_NAME: "microservicesdb"
+      DB_USER: "dbadmin"
+      DB_PASSWORD: "ChangeMe123!"
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       CLOUD_SQS_PRODUCT_EVENTS_ENABLED: "true"
       CLOUD_SQS_PRODUCT_EVENTS_QUEUE_URL: ${QUEUE_URL}
@@ -49,6 +60,11 @@ services:
     ports:
       - "8083:8083"
     environment:
+      DB_HOST: ${DB_HOST:-microservices-project-db.cc5akoumm873.us-east-1.rds.amazonaws.com}
+      DB_PORT: "5432"
+      DB_NAME: "microservicesdb"
+      DB_USER: "dbadmin"
+      DB_PASSWORD: "ChangeMe123!"
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SERVICES_USER_URL: http://user-service:8081
       SERVICES_PRODUCT_URL: http://product-service:8082
