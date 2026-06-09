@@ -12,6 +12,7 @@ services:
       DB_NAME: "microservicesdb"
       DB_USER: "dbadmin"
       DB_PASSWORD: "ChangeMe123!"
+      JAVA_OPTS: "-Xmx160m -Xms128m"
 
   product-service:
     image: ${DOCKERHUB_USERNAME:-local}/product-service:latest
@@ -24,6 +25,7 @@ services:
       DB_NAME: "microservicesdb"
       DB_USER: "dbadmin"
       DB_PASSWORD: "ChangeMe123!"
+      JAVA_OPTS: "-Xmx160m -Xms128m"
       CLOUD_SQS_PRODUCT_EVENTS_ENABLED: "true"
       CLOUD_SQS_PRODUCT_EVENTS_QUEUE_URL: ${QUEUE_URL}
       AWS_REGION: "us-east-1"
@@ -39,17 +41,23 @@ services:
       DB_NAME: "microservicesdb"
       DB_USER: "dbadmin"
       DB_PASSWORD: "ChangeMe123!"
+      JAVA_OPTS: "-Xmx160m -Xms128m"
       SERVICES_USER_URL: http://user-service:8081
       SERVICES_PRODUCT_URL: http://product-service:8082
       CLOUD_SQS_PRODUCT_EVENTS_CONSUMER_ENABLED: "true"
       CLOUD_SQS_PRODUCT_EVENTS_CONSUMER_QUEUE_URL: ${DLQ_URL}
       AWS_REGION: "us-east-1"
+    depends_on:
+      - user-service
+      - product-service
 
   api-gateway:
     image: ${DOCKERHUB_USERNAME:-local}/api-gateway:latest
     build: ./api-gateway
     ports:
       - "8080:8080"
+    environment:
+      JAVA_OPTS: "-Xmx128m -Xms64m"
     depends_on:
       - user-service
       - product-service
