@@ -29,6 +29,9 @@
     - name: Create app directory
       raw: mkdir -p /home/ec2-user/app
 
+    - name: Reset SSH connection to avoid timeout
+      meta: reset_connection
+
     - name: Copy docker-compose.yml to EC2
       copy:
         src: ../../services/docker-compose.yml
