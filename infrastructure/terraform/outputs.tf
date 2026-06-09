@@ -12,3 +12,11 @@ output "rds_endpoint" {
   value       = aws_db_instance.postgres.endpoint
   description = "Endpoint da Base de Dados RDS"
 }
+
+output "queue_url" {
+  value = aws_sqs_queue.main.id
+}
+
+output "dlq_url" {
+  value = aws_sqs_queue.dlq.id
+}

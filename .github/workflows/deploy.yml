@@ -17,6 +17,9 @@ jobs:
   infrastructure:
     name: Provision Infrastructure
     runs-on: ubuntu-latest
+    outputs:
+      queue_url: ${{ steps.tf-outputs.outputs.QUEUE_URL }}
+      dlq_url: ${{ steps.tf-outputs.outputs.DLQ_URL }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -36,6 +39,13 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
+        working-directory: infrastructure/terraform
+
+      - name: Export Terraform Outputs
+        id: tf-outputs
+        run: |
+          echo "QUEUE_URL=$(terraform output -raw queue_url)" >> $GITHUB_OUTPUT
+          echo "DLQ_URL=$(terraform output -raw dlq_url)" >> $GITHUB_OUTPUT
         working-directory: infrastructure/terraform
 
   build-and-push:
@@ -106,6 +116,6 @@ jobs:
             --private-key microservices-key.pem \
             -u ec2-user \
             -e "docker_username=${{ secrets.DOCKERHUB_USERNAME }}" \
+            -e "queue_url=${{ needs.infrastructure.outputs.queue_url }}" \
+            -e "dlq_url=${{ needs.infrastructure.outputs.dlq_url }}" \
             ansible/playbooks/deploy.yml
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: False

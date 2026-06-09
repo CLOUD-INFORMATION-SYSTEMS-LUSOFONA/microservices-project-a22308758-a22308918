@@ -38,7 +38,7 @@ services:
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       CLOUD_SQS_PRODUCT_EVENTS_ENABLED: "true"
-      CLOUD_SQS_PRODUCT_EVENTS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/759316131518/microservices-project-queue"
+      CLOUD_SQS_PRODUCT_EVENTS_QUEUE_URL: ${QUEUE_URL}
       #AWS_ACCESS_KEY_ID: "" #alterar dps
       #AWS_SECRET_ACCESS_KEY: "" #alterar dps
       AWS_REGION: "us-east-1"
@@ -53,7 +53,7 @@ services:
       SERVICES_USER_URL: http://user-service:8081
       SERVICES_PRODUCT_URL: http://product-service:8082
       CLOUD_SQS_PRODUCT_EVENTS_CONSUMER_ENABLED: "true"
-      CLOUD_SQS_PRODUCT_EVENTS_CONSUMER_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/759316131518/microservices-project-dlq" #url da dlq
+      CLOUD_SQS_PRODUCT_EVENTS_CONSUMER_QUEUE_URL: ${DLQ_URL}
       #AWS_ACCESS_KEY_ID: "" #alterar dps
       #AWS_SECRET_ACCESS_KEY: "" #alterar dps
       AWS_REGION: "us-east-1"

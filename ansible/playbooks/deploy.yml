@@ -39,6 +39,14 @@
         owner: ec2-user
         mode: '0644'
 
+    - name: Write .env file
+      copy:
+        dest: /home/ec2-user/app/.env
+        content: |
+          DOCKERHUB_USERNAME={{ docker_username }}
+          QUEUE_URL={{ queue_url }}
+          DLQ_URL={{ dlq_url }}
+
     - name: Pull latest images and restart stack
       raw: |
         cd /home/ec2-user/app

@@ -198,3 +198,16 @@ resource "aws_db_instance" "postgres" {
 
   tags = var.common_tags
 }
+
+resource "aws_sqs_queue" "dlq" {
+  name = "product-events-dlq"
+}
+
+resource "aws_sqs_queue" "main" {
+  name = "microservices-project-queue"
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.dlq.arn
+    maxReceiveCount     = 3
+  })
+}
