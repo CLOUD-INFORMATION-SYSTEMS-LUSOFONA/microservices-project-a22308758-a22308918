@@ -2,22 +2,19 @@ server:
   port: 8083
 
 spring:
-  spring:
-    application:
-      name: order-service
-    datasource:
-      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:microservicesdb}
-      username: ${DB_USER:dbadmin}
-      password: ${DB_PASSWORD:ChangeMe123!}
-      driver-class-name: org.postgresql.Driver
-    jpa:
-      open-in-view: false
-      hibernate:
-        ddl-auto: update
-      show-sql: true
-      properties:
-        hibernate:
-          format_sql: true
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:microservicesdb}
+    username: ${DB_USER:dbadmin}
+    password: ${DB_PASSWORD:ChangeMe123!}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
       hibernate:
         format_sql: true
   
@@ -79,20 +76,17 @@ springdoc:
 # Service URLs (for Feign clients)
 services:
   user:
-    url: http://localhost:8081
+    url: ${SERVICES_USER_URL:http://localhost:8081}
   product:
-    url: http://localhost:8082
+    url: ${SERVICES_PRODUCT_URL:http://localhost:8082}
 
-    #    bootstrap-servers: kafka:9092 url: http://user-service:8081 url: http://product-service:8082
-
-# Optional AWS SQS consumer for product-created events (same queue URL as product-service producer)
+# Optional AWS SQS consumer for product-created events
 cloud:
   sqs:
     product-events-consumer:
-      enabled: false
-      queue-url: "https://sqs.us-east-1.amazonaws.com/759316131518/microservices-project-queue"
-      region: "us-east-1"
+      enabled: ${CLOUD_SQS_PRODUCT_EVENTS_CONSUMER_ENABLED:false}
+      queue-url: ${CLOUD_SQS_PRODUCT_EVENTS_CONSUMER_QUEUE_URL}
+      region: ${AWS_REGION:us-east-1}
       poll-interval-ms: 5000
       max-number-of-messages: 10
       wait-time-seconds: 20
-
