@@ -162,13 +162,57 @@ resource "aws_security_group" "rds_sg" {
   tags = var.common_tags
 }
 
+resource "aws_iam_role" "ec2_role" {
+  name = "${var.project_name}-ec2-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = var.common_tags
+}
+
+resource "aws_iam_role_policy" "ec2_policy" {
+  name = "${var.project_name}-ec2-policy"
+  role = aws_iam_role.ec2_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sqs:*",
+          "rds:*"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "${var.project_name}-ec2-profile"
+  role = aws_iam_role.ec2_role.name
+}
+
 resource "aws_instance" "sanity_ec2" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t3.micro"
   key_name                    = "microservices-key"
   subnet_id                   = aws_subnet.public_a.id
   vpc_security_group_ids      = [aws_security_group.sanity_sg.id]
-  associate_public_ip_address = true 
+  associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
 
   tags = merge(var.common_tags, {
     Name = "${var.project_name}-sanity-ec2"
