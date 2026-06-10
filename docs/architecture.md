@@ -46,30 +46,35 @@ A comunicação entre componentes é controlada através de Security Groups
 
 ## Comunicação Entre Serviços
 
-O sistema é composto por dois serviços:
+O sistema é composto por 4 serviços principais:
 
-* Service A
-* Service B
+- `api-gateway`
+- `user-service`
+- `product-service`
+- `order-service`
 
-O Service A produz mensagens
+### Síncrono (REST)
 
-As mensagens são enviadas para uma fila Amazon SQS
+- api-gateway → user-service
+- api-gateway → product-service
+- api-gateway → order-service
+- order-service → user-service (validação)
+- order-service → product-service (validação)
 
-O Service B consome as mensagens da fila e processa a informação recebida
+### Assíncrono (SQS)
 
-Esta abordagem reduz o acoplamento entre componentes e melhora a escalabilidade da solução
-
+- order-service publica eventos de encomenda
+- product-service consome eventos da fila
 ---
 
 
 ## Componentes Event-Driven
 
-A comunicação assíncrona é realizada através do Amazon SQS
+- Mensagens são publicadas pelo `order-service`
+- Consumidas pelo `product-service`
+- Falhas repetidas são movidas para a DLQ
 
-Quando uma mensagem falha repetidamente o processamento, é enviada para uma Dead Letter Queue
-
-Esta abordagem aumenta a resiliência da aplicação e facilita a identificação de erros
-
+- A DLQ permite análise de erros e reprocessamento manual.
 ---
 
 ## Principais Decisões Técnicas
