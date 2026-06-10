@@ -67,7 +67,7 @@ logging:
 cloud:
   sqs:
     product-events:
-      enabled: false
-      queue-url: "https://sqs.us-east-1.amazonaws.com/759316131518/microservices-project-queue"
-      region: "us-east-1"
+      enabled: ${CLOUD_SQS_PRODUCT_EVENTS_ENABLED:false}
+      queue-url: ${CLOUD_SQS_PRODUCT_EVENTS_QUEUE_URL}
+      region: ${AWS_REGION:us-east-1}
 
