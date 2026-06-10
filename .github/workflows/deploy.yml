@@ -118,6 +118,7 @@ jobs:
             -e "docker_username=${{ secrets.DOCKERHUB_USERNAME }}" \
             -e "queue_url=${{ needs.infrastructure.outputs.queue_url }}" \
             -e "dlq_url=${{ needs.infrastructure.outputs.dlq_url }}" \
+            -e "aws_region=us-east-1" \
             ansible/playbooks/deploy.yml
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
